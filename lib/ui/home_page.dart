@@ -64,15 +64,12 @@ class _HomePageState extends State<HomePage> {
 
     return json.decode(response.body);
   }
-
+                                                                                                                                                                                                
   @override
   void initState() {
     super.initState();
 
-    print('Initializing...');
-    _getGifs().then((map) => {
-      print(map)
-    });
+    _getGifs().then((map) => { print(map) });
   }
 
   @override
