@@ -1,6 +1,7 @@
 // frozen_string_literal: true
 
 import 'package:flutter/material.dart';
+import 'package:giphy_search/ui/gif_page.dart';
 import 'package:http/http.dart' as http;
 
 import 'dart:convert';
@@ -13,11 +14,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final pageLimit    = '19';
   final apiHost      = 'api.giphy.com';
   final apiNamespace = '/v1/gifs/search';
   final apiKey       = 'kL0szuzHnMiMJ9VzJTqQs46xarkNeuJA';
 
   String? _search;
+  int _offSet = 0;
 
   Future<Map> _getGifs() async {
     http.Response response;
@@ -32,7 +35,8 @@ class _HomePageState extends State<HomePage> {
             'q': 'dogs',
             'lang': 'en',
             'api_key': apiKey,
-            'offset': '0',
+            'limit': pageLimit,
+            'offset': _offSet.toString(),
             'rating': 'g'
           }
         )
@@ -47,7 +51,8 @@ class _HomePageState extends State<HomePage> {
           queryParameters: {
             'q': _search,
             'api_key': apiKey,
-            'offset': '0',
+            'limit': pageLimit,
+            'offset': _offSet.toString(),
             'rating': 'g'
           }
         )
@@ -79,10 +84,10 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(10.0),
+           Padding(
+            padding: const EdgeInsets.all(10.0),
             child: TextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Pesquise Aqui!',
                 labelStyle: TextStyle(color: Colors.white),
                 focusedBorder: OutlineInputBorder(
@@ -96,8 +101,14 @@ class _HomePageState extends State<HomePage> {
                   )
                 ),
               ),
-              style: TextStyle(color: Colors.white, fontSize: 18.0),
+              style: const TextStyle(color: Colors.white, fontSize: 18.0),
               textAlign: TextAlign.center,
+              onSubmitted: (text) {
+                setState(() {
+                  _search = text;
+                  _offSet = 0;
+                });
+              },
             ),
           ),
           Expanded(
@@ -112,6 +123,7 @@ class _HomePageState extends State<HomePage> {
                       alignment: Alignment.center,
                       child: const CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 5.0,
                       ),
                     );
                   default:
@@ -129,6 +141,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  int _getCount(List data) {
+    if(_search == null) {
+      return data.length;
+    } else {
+      return data.length + 1;
+    }
+  }
+
   Widget _createGifTable(BuildContext context, AsyncSnapshot snapshot) {
     return GridView.builder(
         padding: const EdgeInsets.all(10.0),
@@ -137,13 +157,43 @@ class _HomePageState extends State<HomePage> {
           crossAxisSpacing: 10.0,
           mainAxisSpacing: 10.0,
         ),
-        itemCount: snapshot.data['data'].length,
+        itemCount: _getCount(snapshot.data['data']),
         itemBuilder: (context, index) {
-          return GestureDetector(
-            child: Image.network(snapshot.data['data'][index]['images']['fixed_height']['url'],
-            height: 300.0,
-            fit: BoxFit.cover,),
-          );
+          if (_search == null || index < snapshot.data['data'].length) {
+            return GestureDetector(
+              child: Image.network(
+                snapshot.data['data'][index]['images']['fixed_height']['url'],
+                height: 300.0,
+                fit: BoxFit.cover,),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GifPage(snapshot.data['data'][index]))
+                );
+              },
+            );
+          } else {
+            return GestureDetector(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.add, color: Colors.white, size: 70.0),
+                  Text('Carregar mais...',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22.0
+                    ),
+                  ),
+                ],
+              ),
+              onTap: () {
+                setState(() {
+                  _offSet += 19;
+                });
+              },
+            );
+          }
         }
     );
   }
