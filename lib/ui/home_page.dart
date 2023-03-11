@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 
 import 'dart:convert';
 
+import 'package:share/share.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -170,6 +172,11 @@ class _HomePageState extends State<HomePage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => GifPage(snapshot.data['data'][index]))
+                );
+              },
+              onLongPress: () {
+                Share.share(
+                  snapshot.data['data'][index]['images']['fixed_height']['url'],
                 );
               },
             );
