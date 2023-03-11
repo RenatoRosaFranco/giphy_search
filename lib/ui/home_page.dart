@@ -14,7 +14,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final apiHost      = 'api.giphy.com';
-  final apiNamespace = 'v1/gifs/search';
+  final apiNamespace = '/v1/gifs/search';
   final apiKey       = 'kL0szuzHnMiMJ9VzJTqQs46xarkNeuJA';
 
   String? _search;
@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
           host: apiHost,
           path: apiNamespace,
           queryParameters: {
+            'q': 'dogs',
             'lang': 'en',
             'api_key': apiKey,
             'offset': '0',
@@ -60,6 +61,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
+    print('Initializing...');
     _getGifs().then((map) => {
       print(map)
     });
@@ -74,12 +76,12 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
       ),
       backgroundColor: Colors.black,
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
-            TextField(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(10.0),
+            child: TextField(
               decoration: InputDecoration(
                 labelText: 'Pesquise Aqui!',
                 labelStyle: TextStyle(color: Colors.white),
@@ -96,10 +98,35 @@ class _HomePageState extends State<HomePage> {
               ),
               style: TextStyle(color: Colors.white, fontSize: 18.0),
               textAlign: TextAlign.center,
-            )
-          ],
-        ),
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder(
+              future: _getGifs(),
+              builder: (context, snapshot) {
+                switch (snapshot.connectionState){
+                  case ConnectionState.waiting:
+                    return Container(
+                      width: 200.0,
+                      height: 200.0,
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    );
+                  default:
+                    if (snapshot.hasError) return Container();
+                    else return _createGifTable(context, snapshot);
+                }
+              },
+            ),
+          )
+        ],
       ),
     );
+  }
+
+  Widget _createGifTable(BuildContext context, AsyncSnapshot snapshot) {
+    return Container();
   }
 }
